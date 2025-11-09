@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Govindam — Restaurant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Mobile-first tweaks and animations */
+    :root{
+      --accent-from: #f59e0b; /* amber-500 */
+      --accent-to: #fb7185;   /* rose-400 */
+    }
+    @keyframes floaty { 0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)} }
+    .floaty { animation: floaty 4s ease-in-out infinite; }
+    .glass { background: rgba(255,255,255,0.6); backdrop-filter: blur(6px); }
+    .card-tilt { transform: perspective(900px) rotateX(0deg) rotateY(0deg); transition: transform .25s ease; }
+    .card-tilt:hover{ transform: perspective(900px) rotateX(6deg) rotateY(-6deg) scale(1.02); }
+
+    /* touch target sizing */
+    .touch { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+
+    /* Off-canvas mobile menu */
+    .offcanvas { transform: translateX(100%); transition: transform .28s cubic-bezier(.2,.9,.2,1); }
+    .offcanvas.open { transform: translateX(0); }
+
+    /* Entrance animation helper */
+    .enter { transform: translateY(10px); opacity: 0; transition: transform .5s, opacity .5s; }
+    .enter.visible { transform: translateY(0); opacity: 1; }
+
+    /* Better responsive image handling */
+    .hero-img { width: 100%; height: 14rem; object-fit: cover; border-radius: .75rem; }
+    @media(min-width: 768px){ .hero-img { height: 20rem; } }
+
+    /* Menu item animation (initial hidden -> animate in) */
+    .menu-item { opacity: 0; transform: translateY(14px) scale(.995); will-change: transform, opacity; }
+    .menu-item.animate-in { opacity: 1; transform: translateY(0) scale(1); transition: opacity .46s cubic-bezier(.2,.9,.2,1), transform .46s cubic-bezier(.2,.9,.2,1); }
+
+    /* subtle stagger helper if JS not available */
+    .menu-item[data-fallback-delay] { transition-delay: var(--delay, 0ms); }
+  </style>
+</head>
+<body class="antialiased text-slate-900 bg-gradient-to-b from-amber-50 via-white to-amber-100">
+
+  <!-- NAV: mobile-friendly -->
+  <nav class="fixed w-full z-50 top-4 px-4 sm:px-12">
+    <div class="max-w-6xl mx-auto flex items-center justify-between glass rounded-2xl px-3 py-2 shadow-md">
+      <a href="#hero" class="flex items-center gap-3">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-[var(--accent-from)] to-[var(--accent-to)] flex items-center justify-center text-white shadow">
+          <span class="text-lg">☕</span>
+        </div>
+        <div class="leading-tight">
+          <div class="text-sm sm:text-lg font-extrabold tracking-tight">Govindam</div>
+          <div class="text-[10px] sm:text-xs -mt-0.5 text-slate-700">Urban Restaurant & Comfort Kitchen</div>
+        </div>
+      </a>
+
+      <div class="hidden md:flex items-center gap-4">
+        <a href="#menu" id="navMenu" class="hover:text-amber-600 transition text-sm">Menu</a>
+        <a href="#gallery" class="hover:text-amber-600 transition text-sm">Gallery</a>
+        <a href="#about" class="hover:text-amber-600 transition text-sm">About</a>
+        <button id="reserveBtn" class="bg-amber-500 text-white px-4 py-2 rounded-xl shadow touch">Reserve</button>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <div class="md:hidden flex items-center gap-2">
+        <button id="callBtn" class="bg-white/40 p-2 rounded-lg touch">📞</button>
+        <button id="mobileToggle" aria-label="Open menu" class="bg-white/40 p-2 rounded-lg touch">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Off-canvas menu for mobile -->
+  <aside id="offcanvas" class="fixed inset-y-0 right-0 w-11/12 max-w-xs z-40 bg-white shadow-lg p-6 offcanvas md:hidden" aria-hidden="true">
+    <div class="flex items-center justify-between mb-6">
+      <div class="font-bold">Govindam</div>
+      <button id="closeOffcanvas" aria-label="Close menu">✕</button>
+    </div>
+    <nav class="flex flex-col gap-4">
+      <a href="#menu" class="py-3 touch border-b">Menu</a>
+      <a href="#gallery" class="py-3 touch border-b">Gallery</a>
+      <a href="#about" class="py-3 touch border-b">About</a>
+      <a href="#contact" class="py-3 touch border-b">Contact</a>
+      <button id="reserveBtnMob" class="mt-4 bg-amber-500 text-white py-3 rounded-xl touch">Reserve a table</button>
+    </nav>
+  </aside>
+
+  <!-- HERO -->
+  <header id="hero" class="pt-28 pb-16 sm:pt-36 sm:pb-24 px-4 sm:px-12">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+
+      <div class="enter" id="heroText">
+        <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight">Govindam<br><span class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent-from)] to-[var(--accent-to)]">Restaurant</span></h1>
+        <p class="mt-3 sm:mt-6 text-sm sm:text-lg text-slate-700 max-w-lg">Handcrafted seasonal plates, warm hospitality, and local flavors — served with a bright modern twist. Quiet corners for work, big tables for friends.</p>
+
+        <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <a href="#menu" id="exploreMenuBtn" class="inline-flex items-center gap-3 bg-amber-500 text-white px-4 py-3 rounded-2xl shadow touch justify-center">Explore Menu</a>
+          <button id="reserveBtn2" class="inline-flex items-center gap-2 border border-amber-500 text-amber-600 px-4 py-3 rounded-2xl shadow-sm touch justify-center">Reserve Table</button>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3 items-center text-sm text-slate-700">
+          <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">Today · 9:00 AM — 11:00 PM</div>
+          <div class="px-3 py-1 bg-white rounded-full shadow">in the prime area</div>
+        </div>
+
+        <div class="mt-4 flex gap-2 items-center text-sm">
+          <div class="px-3 py-2 bg-white rounded-full shadow">pav-bhaji • Thali • juice</div>
+          <div class="px-3 py-2 bg-white rounded-full shadow">Signature dishes</div>
+        </div>
+      </div>
+
+      <div class="relative enter" id="heroVisual">
+        <div class="rounded-2xl shadow overflow-hidden card-tilt">
+          <!-- use srcset for responsive images, lazy load on mobile -->
+          <img class="hero-img" src="IMG_0336.JPG"  sizes="(max-width: 640px) 100vw, 50vw" loading="lazy" alt="Govindam dish" />
+
+          <div class="absolute -left-8 -top-8 w-24 h-24 rounded-full bg-amber-200/60 blur-3xl floaty hidden sm:block"></div>
+
+          <div class="absolute right-4 top-4 glass px-3 py-2 rounded-lg shadow text-xs">House Special — Govindam Thali</div>
+
+          <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-white p-3 rounded-lg shadow">Fresh Ingredients<div class="text-sm text-slate-500">Local, seasonal produce.</div></div>
+            <div class="bg-white p-3 rounded-lg shadow">Comfort & Calm<div class="text-sm text-slate-500">Quiet corners for work & conversation.</div></div>
+          </div>
+        </div>
+
+        
+
+    </div>
+  </header>
+
+  <!-- MENU -->
+  <section id="menu" class="max-w-6xl mx-auto px-4 sm:px-12 py-10 enter">
+    <h2 class="text-2xl sm:text-3xl font-bold">Menu — seasonal & handcrafted</h2>
+    <div class="mt-4 flex flex-wrap items-center gap-3" id="filters">
+      <button data-filter="all" class="px-3 py-2 rounded-full bg-amber-500 text-white touch">All</button>
+      <button data-filter="breakfast" class="px-3 py-2 rounded-full bg-white shadow touch">Breakfast</button>
+      <button data-filter="main" class="px-3 py-2 rounded-full bg-white shadow touch">Main</button>
+      <button data-filter="dessert" class="px-3 py-2 rounded-full bg-white shadow touch">Dessert</button>
+      <button data-filter="beverage" class="px-3 py-2 rounded-full bg-white shadow touch">Beverage</button>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="menuList">
+      <!-- Items injected by JS -->
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery" class="bg-amber-50 py-8 sm:py-12 enter">
+    <div class="max-w-6xl mx-auto px-4 sm:px-12">
+      <h3 class="text-xl sm:text-2xl font-bold">Gallery</h3>
+      <p class="text-slate-600 mt-1 text-sm">A few captures from Govindam </p>
+
+      <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <img src="IMG_0344.JPG" class="rounded-xl h-32 sm:h-40 w-full object-cover shadow-lg" loading="lazy" alt="gallery1" />
+        <img src="IMG_0339.JPG" class="rounded-xl h-32 sm:h-40 w-full object-cover shadow-lg" loading="lazy" alt="gallery2" />
+        <img src="IMG_0338.JPG" class="rounded-xl h-32 sm:h-40 w-full object-cover shadow-lg" loading="lazy" alt="gallery3" />
+        <img src="IMG_0337.JPG" class="rounded-xl h-32 sm:h-40 w-full object-cover shadow-lg" loading="lazy" alt="gallery4" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT + CONTACT -->
+  <section id="about" class="max-w-6xl mx-auto px-4 sm:px-12 py-10 enter">
+    <div class="grid md:grid-cols-2 gap-6 items-start">
+      <div>
+        <h3 class="text-xl sm:text-2xl font-bold">About Govindam</h3>
+        <p class="text-slate-700 mt-3 text-sm">Born from family recipes and mindful sourcing, Govindam is a neighborhood Restaurant where every dish has a story. We cook with spice, patience, and a touch of mischief.</p>
+
+        <ul class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <li class="bg-white p-3 rounded-lg shadow">Pure Veg Restaurant</li>
+          <li class="bg-white p-3 rounded-lg shadow">Clean place</li>
+          <li class="bg-white p-3 rounded-lg shadow">Cozy Seating</li>
+          <li class="bg-white p-3 rounded-lg shadow">Catering Available</li>
+        </ul>
+
+        <div class="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-slate-700">
+          <div>📍 Shop No 8, Pancham Pentagon, Zundal - Tragad Rd, New, Chandkheda, Ahmedabad, Gujarat 382424</div>
+          <div>📞 +91 9875173749</div>
+        </div>
+      </div>
+
+      <div id="contact" class="bg-white p-4 sm:p-6 rounded-2xl shadow">
+        <h4 class="font-semibold">Get in touch</h4>
+        <form class="mt-3 space-y-3">
+          <input id="name" class="w-full border rounded-md px-3 py-2" placeholder="Name" inputmode="text" />
+          <input id="contact" class="w-full border rounded-md px-3 py-2" placeholder="Email or Phone" inputmode="tel" />
+          <textarea id="message" class="w-full border rounded-md px-3 py-2" placeholder="Message" rows="4"></textarea>
+          <div class="flex gap-3">
+            <button type="button" id="sendMsg" class="px-4 py-2 bg-amber-500 text-white rounded-xl touch">Send</button>
+            <a href="https://maps.app.goo.gl/r5QDFsdVJoNCETyF8" target="_blank" class="px-4 py-2 border rounded-xl touch">Visit on Map</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="mt-8 bg-white/50 backdrop-blur p-4">
+    <div class="max-w-6xl mx-auto px-4 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+      <div>© 2025 Govindam — Cafe & Comfort Kitchen</div>
+      
+  </footer>
+
+  <!-- RESERVATION MODAL (improved for touch) -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/40" id="modalClose"></div>
+    <div class="relative z-50 bg-white rounded-2xl p-4 sm:p-6 shadow-2xl w-full max-w-md">
+      <h4 class="text-lg font-bold">Reserve a table</h4>
+      <p class="text-slate-600 mt-1 text-sm">Quick reservation — we will confirm by phone.</p>
+      <form class="mt-3 grid gap-3">
+        <input id="rname" class="w-full border rounded-md px-3 py-2" placeholder="Name" />
+        <div class="grid grid-cols-2 gap-2">
+          <input id="rdate" class="border rounded-md px-3 py-2" placeholder="Date" type="date" />
+          <input id="rtime" class="border rounded-md px-3 py-2" placeholder="Time" type="time" />
+        </div>
+        <input id="guests" class="w-full border rounded-md px-3 py-2" placeholder="Guests" inputmode="numeric" />
+        <div class="flex gap-2 mt-2">
+          <button type="button" id="cancelRes" class="px-4 py-2 border rounded-xl touch flex-1">Cancel</button>
+          <button type="button" id="requestRes" class="px-4 py-2 bg-amber-500 text-white rounded-xl touch flex-1">Request Reservation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* Menu data */
+    const menu = [
+      { id:1, type:'breakfast', name:'Tulsi Masala Dosa', price:'₹140', desc:'Crispy dosa, spiced potato, house chutney.' },
+      { id:2, type:'main', name:'Govindam Thali', price:'₹299', desc:'Seasonal vegetables, dal, rice, rotis & dessert.' },
+      { id:3, type:'dessert', name:'Gulab Cardamom Kulfi', price:'₹99', desc:'House kulfi soaked in saffron syrup.' },
+      { id:4, type:'beverage', name:'Kesar Latte', price:'₹120', desc:'Steamed milk, saffron infusion, light foam.' },
+      { id:5, type:'main', name:'Paneer Chettinad', price:'₹240', desc:'Rustic Chettinad spices, creamy coconut.' },
+      { id:6, type:'beverage', name:'Masala Cold Brew', price:'₹129', desc:'Cold-brewed with whole spices & citrus.' }
+    ];
+
+    const menuList = document.getElementById('menuList');
+    function renderList(filter='all'){
+      menuList.innerHTML = '';
+      const filtered = filter === 'all' ? menu : menu.filter(m=>m.type===filter);
+      filtered.forEach((item, index)=>{
+        const el = document.createElement('div');
+        el.className = 'bg-white rounded-2xl p-4 sm:p-5 shadow-lg transform transition menu-item';
+        // set a custom CSS variable fallback for transition-delay for no-JS or slow-JS
+        el.style.setProperty('--delay', `${index * 70}ms`);
+        el.innerHTML = `
+          <div class=\"flex items-start justify-between\">\
+            <div>\
+              <div class=\"text-base sm:text-lg font-semibold\">${item.name}</div>\
+              <div class=\"text-xs sm:text-sm text-slate-500 mt-1\">${item.desc}</div>\
+            </div>\
+            <div class=\"text-amber-600 font-bold text-base\">${item.price}</div>\
+          </div>\
+          <div class=\"mt-3 flex gap-2\">\
+            <button class=\"px-3 py-2 bg-amber-100 text-amber-700 rounded-lg touch\">Add</button>\
+            <button class=\"px-3 py-2 border rounded-lg touch\">Customize</button>\
+            <button class=\"ml-auto px-3 py-2 bg-slate-50 rounded-lg touch\">Share</button>\
+          </div>\
+        `;
+        menuList.appendChild(el);
+      });
+    }
+    renderList();
+
+    // Filters
+    document.getElementById('filters').addEventListener('click', (e)=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const filter = btn.dataset.filter;
+      document.querySelectorAll('#filters button').forEach(b=>{ b.classList.remove('bg-amber-500','text-white'); b.classList.add('bg-white','shadow'); });
+      btn.classList.add('bg-amber-500','text-white');
+      btn.classList.remove('bg-white','shadow');
+      renderList(filter);
+      // animate items after filter
+      requestAnimationFrame(()=> animateMenuItems());
+    });
+
+    // Animate menu items with stagger
+    function animateMenuItems(){
+      const items = Array.from(document.querySelectorAll('#menuList .menu-item'));
+      items.forEach((it, i)=>{
+        it.classList.remove('animate-in');
+        // use timeout for staggered effect
+        setTimeout(()=>{ it.classList.add('animate-in'); }, i * 70);
+      });
+    }
+
+    // Smooth scroll + animate when clicking Explore Menu or nav menu
+    function scrollToMenuAndAnimate(){
+      const menuSection = document.getElementById('menu');
+      // smooth scroll, center a bit
+      menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // after scroll duration (approx), run animation — use a small delay to allow scroll
+      setTimeout(()=>{
+        // if items not rendered yet, ensure render (they are rendered already)
+        animateMenuItems();
+      }, 380);
+    }
+
+    document.getElementById('exploreMenuBtn').addEventListener('click', (e)=>{ e.preventDefault(); scrollToMenuAndAnimate(); });
+    document.getElementById('navMenu').addEventListener('click', (e)=>{ e.preventDefault(); scrollToMenuAndAnimate(); });
+
+    // Responsive: offcanvas menu
+    const offcanvas = document.getElementById('offcanvas');
+    document.getElementById('mobileToggle').addEventListener('click', ()=>{ offcanvas.classList.add('open'); offcanvas.setAttribute('aria-hidden','false'); });
+    document.getElementById('closeOffcanvas').addEventListener('click', ()=>{ offcanvas.classList.remove('open'); offcanvas.setAttribute('aria-hidden','true'); });
+    document.getElementById('reserveBtnMob').addEventListener('click', ()=>{ openModal(); offcanvas.classList.remove('open'); });
+
+    // Reservation modal
+    const modal = document.getElementById('modal');
+    function openModal(){ modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    function closeModal(){ modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    document.getElementById('reserveBtn')?.addEventListener('click', openModal);
+    document.getElementById('reserveBtn2')?.addEventListener('click', openModal);
+    document.getElementById('modalClose')?.addEventListener('click', closeModal);
+    document.getElementById('cancelRes')?.addEventListener('click', closeModal);
+    document.getElementById('requestRes')?.addEventListener('click', ()=>{ alert('Reservation requested! We will call to confirm. (Demo)'); closeModal(); });
+
+    // Mobile call quick action
+    document.getElementById('callBtn')?.addEventListener('click', ()=>{ window.location.href = 'tel:+919876543210'; });
+
+    // Send message (fake)
+    document.getElementById('sendMsg')?.addEventListener('click', ()=>{ alert('Message sent — demo only. For a live site we will hook this to email or WhatsApp.'); });
+
+    // Small entrance animations when scrolled into view
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: .12 });
+    document.querySelectorAll('.enter').forEach(el=> observer.observe(el));
+
+    // Accessibility: close offcanvas on escape
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){ offcanvas.classList.remove('open'); closeModal(); }
+    });
+
+    // Ensure first menu animation runs when page loads if user scrolls immediately
+    window.addEventListener('load', ()=>{ /* no auto-run; will animate when user clicks Explore Menu or uses filter */ });
+  </script>
+</body>
+</html>
